@@ -128,9 +128,24 @@ UsbdMscDeInit(usbdifClassDef_t *prc, uint8_t cfgidx)
 static usbdifStatus_t
 UsbdMscSetup(usbdifClassDef_t *prc, usbifSetup_t *s)
 {
-  UsbdMscBotSetup(prc, s);
+  usbdifStatus_t        result;
 
-  return USBDIF_STATUS_SUCCESS;
+  if(s->bmRequest == 0x02 &&
+     s->bRequest == USB_BREQ_CLEAR_FEATURE) {
+    int         sz;
+    UsbdevCloseEp(prc->dev, s->wIndex);
+    if(s->wIndex & 0x80) {
+      sz  = USBDMSC_PACKET_SIZE_FS_IN;
+    } else {
+      sz  = USBDMSC_PACKET_SIZE_FS_OUT;
+    }
+    UsbdevOpenEp(prc->dev, s->wIndex, USBIF_EP_BULK, sz);
+    result = USBDIF_STATUS_SUCCESS;
+  } else {
+    result = UsbdMscBotSetup(prc, s);
+  }
+
+  return result;
 }
 
 static usbdifStatus_t

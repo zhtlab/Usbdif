@@ -108,6 +108,8 @@ UsbdmscBotSendData(usbdifClassDef_t *prc, uint8_t *buf, int szBuf, int szTotal)
     usbdmscBotSendPos = 0;
   }
 
+  result = USBDIF_STATUS_SUCCESS;
+
   return result;
 }
 
@@ -151,6 +153,8 @@ UsbdmscBotDataInDone(usbdifClassDef_t *prc, uint8_t epnum)
       bot.state = USBDMSCBOT_STATE_IDLE;
 
     }
+
+    result = USBDIF_STATUS_SUCCESS;
   }
 
   return result;

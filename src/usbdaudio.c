@@ -107,9 +107,11 @@ UsbdAudioCbInit(usbdifClassDef_t *prc, int speed)
   pAudio->outBufPosRd = 0;
 
   /* Open EP OUT */
+#if 0
   UsbdevOpenEp(prc->dev, pAudio->epOut, USBIF_EP_ISOC, pAudio->epSizeOut);
   UsbdevOpenEp(prc->dev, pAudio->epFb,  USBIF_EP_ISOC, 4);
   UsbdevOpenEp(prc->dev, pAudio->epIn, USBIF_EP_ISOC, pAudio->epSizeIn);
+#endif
 
   /* Initialize the Audio output Hardware layer */
   if(((usbdAudioCb_t *)prc->pUserData)->init(CONFIG_AUDIO_FS_48K000, AUDIO_DEFAULT_VOLUME, 0) != USBDIF_STATUS_SUCCESS) goto fail;
@@ -328,7 +330,7 @@ UsbdAudioCbSof(usbdifClassDef_t *prc, usbifSof_t *sof)
     valFb >>= 2;
   }
 
-  if(pAudio->altCtrl) {
+  if(pAudio->altOut) {
     if(i > 250) {
       bufFb[0] =  valFb        & 0xff;
       bufFb[1] = (valFb >>  8) & 0xff;
@@ -407,9 +409,14 @@ UsbdAudioStandardSetInterface(usbdifClassDef_t *prc, usbifSetup_t *s)
   val = s->wValue & 0xff;
   if(s->wIndex == pAudio->altCtrl) {
     pAudio->altCtrl = val;
+
+  } else if(s->wIndex == pAudio->ifOut) {
+    pAudio->altOut  = val;
     if(val) {
+      UsbdevFlush(prc->dev, pAudio->epOut);
       UsbdevFlush(prc->dev, pAudio->epFb);
-      UsbdevOpenEp(prc->dev, pAudio->epFb, USBIF_EP_BULK, 4);
+      UsbdevOpenEp(prc->dev, pAudio->epOut, USBIF_EP_ISOC, pAudio->epSizeOut);
+      UsbdevOpenEp(prc->dev, pAudio->epFb, USBIF_EP_ISOC, 4);
 
       uint8_t       buf[4];
       int           clk = 48<<14;
@@ -419,15 +426,8 @@ UsbdAudioStandardSetInterface(usbdifClassDef_t *prc, usbifSetup_t *s)
       buf[3] = (clk >> 24) & 0xff;
       UsbdevTransmit(prc->dev, pAudio->epFb, buf, sizeof(buf));
     } else {
-      UsbdevCloseEp(prc->dev, pAudio->epFb);
-    }
-  } else if(s->wIndex == pAudio->ifOut) {
-    pAudio->altOut  = val;
-    if(val) {
-      UsbdevFlush(prc->dev, pAudio->epOut);
-      UsbdevOpenEp(prc->dev, pAudio->epOut, USBIF_EP_ISOC, pAudio->epSizeOut);
-    } else {
       UsbdevCloseEp(prc->dev, pAudio->epOut);
+      UsbdevCloseEp(prc->dev, pAudio->epFb);
     }
   } else if(s->wIndex == pAudio->ifIn) {
     pAudio->altIn   = val;

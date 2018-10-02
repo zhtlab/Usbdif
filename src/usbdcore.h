@@ -30,8 +30,8 @@
 
 usbdifStatus_t          UsbdcoreCbBusState(int dev, usbdifBusState_t state);
 usbdifStatus_t          UsbdcoreCbSetup(int unit, usbifSetup_t *s);
-usbdifStatus_t          UsbdcoreCbDataOut(int unit, int epnum, int size);
-usbdifStatus_t          UsbdcoreCbDataInDone(int unit, int epnum);
+usbdifStatus_t          UsbdcoreCbDataOut(int unit, uint8_t epnum, int size);
+usbdifStatus_t          UsbdcoreCbDataInDone(int unit, uint8_t epnum);
 
 usbdifStatus_t          UsbdevCtrlSendData(int unit, uint8_t *buf, uint16_t len);
 usbdifStatus_t          UsbdevCtrlStatus(int unit);

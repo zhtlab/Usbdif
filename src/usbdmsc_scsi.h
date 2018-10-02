@@ -56,7 +56,7 @@ usbdifStatus_t          UsbdmscScsiCtrl(usbdifClassDef_t *prc, uint8_t *buf, int
 
 
 usbdifStatus_t          UsbdmscScsiDataWrite(usbdifClassDef_t *prc, uint8_t *buf, int size);
-usbdifStatus_t          UsbdmscScsiDataRead(usbdifClassDef_t *prc, int epnum);
+usbdifStatus_t          UsbdmscScsiDataRead(usbdifClassDef_t *prc, uint8_t epnum);
 
 #ifdef _USBDMSC_SCSI_C_
 static usbdifStatus_t   UsbdmscScsiCommandInquiry(usbdifClassDef_t *prc, uint8_t *buf, int size, int respLen);

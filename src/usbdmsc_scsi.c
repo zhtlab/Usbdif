@@ -349,7 +349,7 @@ UsbdmscScsiDataWrite(usbdifClassDef_t *prc, uint8_t *buf, int size)
   return result;
 }
 usbdifStatus_t
-UsbdmscScsiDataRead(usbdifClassDef_t *prc, int epnum)
+UsbdmscScsiDataRead(usbdifClassDef_t *prc, uint8_t epnum)
 {
   usbdifStatus_t        re;
 

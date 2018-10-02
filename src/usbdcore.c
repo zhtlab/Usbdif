@@ -171,7 +171,7 @@ UsbdcoreCbSetup(int unit, usbifSetup_t *s)
   * @retval result
   */
 usbdifStatus_t
-UsbdcoreCbDataOut(int unit, int epnum, int size)
+UsbdcoreCbDataOut(int unit, uint8_t epnum, int size)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
   struct _stUsbdifDev   *psc;
@@ -193,7 +193,7 @@ UsbdcoreCbDataOut(int unit, int epnum, int size)
   * @retval result
   */
 usbdifStatus_t
-UsbdcoreCbDataInDone(int unit, int epnum)
+UsbdcoreCbDataInDone(int unit, uint8_t epnum)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
   struct _stUsbdifDev   *psc;

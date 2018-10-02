@@ -64,7 +64,7 @@ usbifClassCb_t  *usbifClassCbTbl[] = {
   * @brief  init event entry in USBDIF
   * @details this funcion is called at initialize
   * @param  dev the descriptor number of the modeule device
-  * @param  epnum endpoint number
+  * @param  speed  FS, HS, SS
   * @retval result
   */
 uint8_t
@@ -93,7 +93,7 @@ UsbifCbInit(int dev, int speed)
   * @brief  deinit event entry in USBDIF
   * @details this funcion is called at deinitialize
   * @param  dev the descriptor number of the modeule device
-  * @param  epnum endpoint number
+  * @param  speed  FS, HS, SS
   * @retval result
   */
 uint8_t
@@ -124,7 +124,7 @@ UsbifCbDeInit(int dev, int speed)
   * @details this funcion is called from the module device driver
              if the SETUP packet is coming
   * @param  dev the descriptor number of the modeule device
-  * @param  epnum endpoint number
+  * @param  s   the pointer of setup structure
   * @retval result
   */
 uint8_t
@@ -140,7 +140,10 @@ UsbifCbSetup(int dev, usbifSetup_t *s)
   usbdifClassDef_t      *prc;
 
   psc = &usbdif.sc[dev];
-  index = s->wIndex & 0xff;
+  index = s->wIndex & 0x7f;
+  if(s->wIndex & 0x80) {
+    index += USBDIF_RCNUM_OFFSET_IN;
+  }
   classtype = 0;
 
 #if 0
@@ -250,7 +253,6 @@ UsbifCbDataInDone(int dev, uint8_t epnum)
 
   psc = &usbdif.sc[dev];
   num = psc->rcnumByEpnum[epnum + USBDIF_RCNUM_OFFSET_IN];
-
   if(num != USBDIF_CLASSPOS_INVALID) {
     prc = &usbdif.rc[num];
     cb = usbifClassCbTbl[prc->type];

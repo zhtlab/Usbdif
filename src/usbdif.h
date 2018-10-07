@@ -166,6 +166,7 @@ typedef struct {
 } usbdifDescriptor_t;
 typedef struct {
   usbdifDescriptor_t    device;
+  usbdifDescriptor_t    bos;
   usbdifDescriptor_t    qualifier;
   usbdifDescriptor_t    config[4][2];   /* 1st index= 0:LS, 1:FS, 2:HS, 3:SS, 2nd=conf number */
   uint8_t               *pString[10];

@@ -227,8 +227,8 @@ UsbdcoreSetupStandardDeviceRequest(struct _stUsbdifDev *psc, usbifSetup_t *s)
   int                   num, index, classtype;
   int                   i;
   usbifClassCb_t        *cb;
-  uint16_t              len;
-  uint8_t               *pbuf;
+  //  uint16_t              len;
+  //uint8_t               *pbuf;
   usbdifClassDef_t      *prc;
 
   switch(s->bRequest) {
@@ -250,37 +250,39 @@ UsbdcoreSetupStandardDeviceRequest(struct _stUsbdifDev *psc, usbifSetup_t *s)
     switch(s->wValue >> 8) {
 
     case    USB_DESC_TYPE_DEVICE:               /* Std.GetDesc.Device */
-      len  = MIN(psc->pDescTbl->device.len, s->wLength);
-      /*UsbdevCtrlSendData(psc->unit, psc->pDescTbl->device.ptr, len);*/
+      printf("# usbdcore  device desc(busy wait)\r\n");
       s->ptr = psc->pDescTbl->device.ptr;
-      s->len = len;
+      s->len = MIN(psc->pDescTbl->device.len, s->wLength);
+      re = USBDIF_STATUS_SUCCESS;
+      break;
+
+    case    USB_DESC_TYPE_BOS:                  /* Std.GetDesc.Bos */
+      s->ptr = psc->pDescTbl->bos.ptr;
+      s->len = MIN(psc->pDescTbl->bos.len, s->wLength);
       re = USBDIF_STATUS_SUCCESS;
       break;
 
     case    USB_DESC_TYPE_CONFIGURATION:        /* Std.GetDesc.Configuration */
-      len  = MIN(psc->pDescTbl->config[1][0].len, s->wLength);  /* adhoc  get device speed */
-      /*UsbdevCtrlSendData(psc->unit, psc->pDescTbl->config[1][0].ptr, len);*/
       s->ptr = psc->pDescTbl->config[1][0].ptr;
-      s->len = len;
+      s->len = MIN(psc->pDescTbl->config[1][0].len, s->wLength);  /* adhoc  get device speed */
       re = USBDIF_STATUS_SUCCESS;
       break;
 
-    case      USB_DESC_TYPE_DEVICE_QUALIFIER:   /* Std.GetDesc.Configuration */
-      re = USBDIF_STATUS_STALL;
+    case      USB_DESC_TYPE_DEVICE_QUALIFIER:   /* Std.GetDesc.Qualifier */
+      s->ptr = psc->pDescTbl->qualifier.ptr;
+      s->len = MIN(psc->pDescTbl->qualifier.len, s->wLength);
+      re = USBDIF_STATUS_SUCCESS;
       break;
 
     case    USB_DESC_TYPE_STRING:               /* Std.GetDesc.String */
       index = s->wValue & 0xff;
       if(index == 0) {                          /* lang id */
-        len  = MIN(psc->pDescTbl->langId.len, s->wLength);
-        pbuf = psc->pDescTbl->langId.ptr;
+        s->ptr = psc->pDescTbl->langId.ptr;
+        s->len  = MIN(psc->pDescTbl->langId.len, s->wLength);
       } else {
-        len = UsbdcoreBuildStringDesc(psc->pDescTbl->pString[index]);
-        pbuf = usbdcoreString;
+        s->ptr = usbdcoreString;
+        s->len = MIN(UsbdcoreBuildStringDesc(psc->pDescTbl->pString[index]), s->wLength);
       }
-      /*UsbdevCtrlSendData(psc->unit, pbuf, len);*/
-      s->ptr = pbuf;
-      s->len = len;
       re = USBDIF_STATUS_SUCCESS;
       break;
 

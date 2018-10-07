@@ -56,7 +56,7 @@
 #define USB_BREQ_SYNCH_FRAME                            0x0C
 
 
-/*** descritpor types */
+/*** descritpor types  MSB of wValue */
 #define  USB_DESC_TYPE_DEVICE                           1
 #define  USB_DESC_TYPE_CONFIGURATION                    2
 #define  USB_DESC_TYPE_STRING                           3
@@ -78,6 +78,21 @@
 #define  USB_DESC_TYPE_CS_ENDPOINT                      0x25
 #define  USB_DESC_TYPE_SS_ENDPOINT_COMPANION            0x30
 #define  USB_DESC_TYPE_SSPLUS_ISOC_ENDPOINT_COMPANION   0x31
+
+
+/*** device capability type  for BOS */
+#define USB_DEVCAP_TYPE_WIRELESS                0x01
+#define USB_DEVCAP_TYPE_USB20_EXTENSION         0x02
+#define USB_DEVCAP_TYPE_SUPERSPEED_USB          0x03
+#define USB_DEVCAP_TYPE_CONTAINER_ID            0x04
+#define USB_DEVCAP_TYPE_PLATFORM                0x05
+#define USB_DEVCAP_TYPE_POWER_DELIVERY_CAP      0x06
+#define USB_DEVCAP_TYPE_BATTERY_INFO_CAP        0x07
+#define USB_DEVCAP_TYPE_PD_CONSUMER_PORT_CAP    0x08
+#define USB_DEVCAP_TYPE_PD_PROVIDER_PORT_CAP    0x09
+#define USB_DEVCAP_TYPE_SUPERSPEED_PLUS         0x0a
+#define USB_DEVCAP_TYPE_PRECISION_TIME_MEASUREMENT 0x0b
+#define USB_DEVCAP_TYPE_WIRELESS_USB_EXT        0x0c
 
 
 /*** the definition of  CLASSes and SUBCLASSes */

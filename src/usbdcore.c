@@ -70,7 +70,7 @@ UsbdevStart(int dev)
 
 
 /**
-  * @brief  setup event entry in USBDIF
+  * @brief  bus statte change entry in USBDIF
   * @details this funcion is called from the module device driver
              if the SETUP packet is coming
   * @param  dev the descriptor number of the modeule device
@@ -130,16 +130,22 @@ usbdifStatus_t
 UsbdcoreCbSetup(int unit, usbifSetup_t *s)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
-  uint8_t               recipient;
+  uint8_t               type, recipient;
 
   struct _stUsbdifDev   *psc;
 
   psc = &usbdif.sc[unit];
 
+#if 0
+  UsbifShowSetup(s);
+#endif
+
   recipient = s->bmRequest & USB_BMREQ_RECIPIENT_MASK;
+  type = s->bmRequest & USB_BMREQ_TYPE_MASK;
   s->ptr = usbdcoreString;              /* adhoc   local buffer */
   s->len = 0;
-  if(recipient == USB_BMREQ_RECIPIENT_DEVICE) {
+  if(type == USB_BMREQ_TYPE_STANDARD &&
+     recipient == USB_BMREQ_RECIPIENT_DEVICE) {
     result = UsbdcoreSetupStandardDeviceRequest(psc, s);
   } else {
     if(psc->deviceState == USBDIF_DEVICESTATE_CONFIGURED) {
@@ -366,14 +372,17 @@ UsbdevCtrlSendData(int unit, uint8_t *buf, uint16_t len)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
 
-  DevUsbTransmit(unit, 0, buf, len);
-  DevUsbPrepareReceive(unit, 0, NULL, 0);
+  DevUsbTransmit(unit, 0x80, buf, len);
+  if(len > 0) {
+    DevUsbPrepareReceive(unit, 0, NULL, 0);
+  }
 
   result = USBDIF_STATUS_SUCCESS;       /* adhoc */
 
   return result;
 }
 
+#if 0
 /**
   * @brief  send the ctrl packet
   * @param  dev: USB PCD module number
@@ -392,7 +401,7 @@ UsbdevCtrlStatus(int unit)
 
   return result;
 }
-
+#endif
 /**
   * @brief  call at the control error packet will be sent
   * @param  dev  USB PCD module number

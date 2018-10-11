@@ -28,6 +28,7 @@
 #include        "config.h"
 
 #include        "usb_def.h"
+#include        "usb_desc.h"
 
 #include        "usbdif.h"
 #include        "usb_audio.h"
@@ -38,24 +39,36 @@ extern usbifClassCb_t           usbdAudioClassCb;
 extern usbifClassCb_t           usbdCdcClassCb;
 extern usbifClassCb_t           usbdMscClassCb;
 extern usbifClassCb_t           usbdCdcRndisClassCb;
-
+#ifdef USBDESC_ENABLE_VENDOR
+extern usbifClassCb_t           usbdVendorClassCb;
+#endif
 
 usbifClassCb_t  *usbifClassCbTbl[] = {
-  NULL,                 /* 0 none */
-  &usbdAudioClassCb,    /* 1 AUDIO */
-  &usbdCdcClassCb,      /* 2 CDC */
-  NULL,                 /* 3 HID */
-  NULL,                 /* 4 none */
-  NULL,                 /* 5 PHYSICAL */
-  NULL,                 /* 6 IMAGE */
-  NULL,                 /* 7 PRINTER */
-  &usbdMscClassCb,      /* 8 MASS STORAGE */
-  NULL,                 /* 9 HUB */
-  &usbdCdcRndisClassCb, /* A CDC-DATA */
-  NULL,                 /* B CHIP/SMART card */
-  NULL,                 /* C none */
-  NULL,                 /* D CONTENT SECURITY */
-  NULL,                 /* E VIDEO */
+  NULL,                 /*  0 none */
+  &usbdAudioClassCb,    /*  1 AUDIO */
+  &usbdCdcClassCb,      /*  2 CDC */
+  NULL,                 /*  3 HID */
+  NULL,                 /*  4 none */
+  NULL,                 /*  5 PHYSICAL */
+  NULL,                 /*  6 IMAGE */
+  NULL,                 /*  7 PRINTER */
+  &usbdMscClassCb,      /*  8 MASS STORAGE */
+  NULL,                 /*  9 HUB */
+  &usbdCdcRndisClassCb, /*  A CDC-DATA */
+  NULL,                 /*  B CHIP/SMART card */
+  NULL,                 /*  C none */
+  NULL,                 /*  D CONTENT SECURITY */
+  NULL,                 /*  E VIDEO */
+  NULL,                 /*  F Personal healthcare */
+
+  NULL,                 /* 10 n/a */
+  NULL,                 /* 11 n/a */
+  NULL,                 /* 12 n/a */
+#ifdef USBDESC_ENABLE_VENDOR
+  &usbdVendorClassCb,   /* 13 Vendor unique   aliased by 0xff */
+#else
+  NULL,
+#endif
 };
 #define USBIF_CLASS_CB_TBL_COUNT     (sizeof(usbifClassCbTbl)/sizeof(usbifClassCb_t))
 
@@ -110,6 +123,7 @@ UsbifCbDeInit(int dev, int speed)
     num = psc->rcnumByClassnum[i];
     if(num != USBDIF_CLASSPOS_INVALID) {
       prc = &usbdif.rc[num];
+      printf("XXXX type %x\r\n", prc->type);
       cb = usbifClassCbTbl[prc->type];
       if(cb && cb->deinit) cb->deinit(prc, speed);
     }
@@ -151,6 +165,14 @@ UsbifCbSetup(int dev, usbifSetup_t *s)
 #endif
 
   switch (s->bmRequest & USB_BMREQ_RECIPIENT_MASK) {
+  case USB_BMREQ_RECIPIENT_DEVICE:
+    /* call the first entry of classnum table */
+    num = psc->rcnumByClassnum[0];
+    if(num != USBDIF_CLASSPOS_INVALID) {
+      prc = &usbdif.rc[num];
+      classtype = prc->type;
+    }
+    break;
   case USB_BMREQ_RECIPIENT_INTERFACE:
     num = psc->rcnumByIfnum[index];
     if(num != USBDIF_CLASSPOS_INVALID) {
@@ -181,6 +203,12 @@ UsbifCbSetup(int dev, usbifSetup_t *s)
     case USB_BMREQ_TYPE_CLASS:
       UsbifShowSetup(s);
       printf("  this class is not registered yet\r\n");
+      break;
+
+    case USB_BMREQ_TYPE_VENDOR:
+      prc = &usbdif.rc[0];                      /* adhoc */
+      cb = usbifClassCbTbl[prc->type];
+      if(cb && cb->setup) re = cb->setup(prc, s);
       break;
 
     case USB_BMREQ_TYPE_STANDARD:

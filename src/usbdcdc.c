@@ -32,11 +32,6 @@
 #include "usbdcdc.h"
 
 
-#if 0
-#include "system.h"
-#include "gpio.h"
-#endif
-
 extern struct _stUsbdif        usbdif;
 
 usbifClassCb_t  usbdCdcClassCb = {

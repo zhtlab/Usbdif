@@ -31,21 +31,27 @@
 #include        "usb_desc.h"
 
 #include        "usbdif.h"
-#include        "usb_audio.h"
-
+#if USBDESC_ENABLE_AUDIO
+//#include        "usb_audio.h"
+extern usbifClassCb_t           usbdAudioClassCb;
+#endif
 
 struct _stUsbdif        usbdif;
-extern usbifClassCb_t           usbdAudioClassCb;
 extern usbifClassCb_t           usbdCdcClassCb;
 extern usbifClassCb_t           usbdMscClassCb;
 extern usbifClassCb_t           usbdCdcRndisClassCb;
-#ifdef USBDESC_ENABLE_VENDOR
+#if USBDESC_ENABLE_VENDOR
+#include        "usb_vendor.h"
 extern usbifClassCb_t           usbdVendorClassCb;
 #endif
 
 usbifClassCb_t  *usbifClassCbTbl[] = {
   NULL,                 /*  0 none */
+#if USBDESC_ENABLE_AUDIO
   &usbdAudioClassCb,    /*  1 AUDIO */
+#else
+  NULL,                 /*  1 AUDIO */
+#endif
   &usbdCdcClassCb,      /*  2 CDC */
   NULL,                 /*  3 HID */
   NULL,                 /*  4 none */
@@ -54,7 +60,7 @@ usbifClassCb_t  *usbifClassCbTbl[] = {
   NULL,                 /*  7 PRINTER */
   &usbdMscClassCb,      /*  8 MASS STORAGE */
   NULL,                 /*  9 HUB */
-  &usbdCdcRndisClassCb, /*  A CDC-DATA */
+  NULL,                 /*  A CDC-DATA */
   NULL,                 /*  B CHIP/SMART card */
   NULL,                 /*  C none */
   NULL,                 /*  D CONTENT SECURITY */
@@ -64,7 +70,7 @@ usbifClassCb_t  *usbifClassCbTbl[] = {
   NULL,                 /* 10 n/a */
   NULL,                 /* 11 n/a */
   NULL,                 /* 12 n/a */
-#ifdef USBDESC_ENABLE_VENDOR
+#if USBDESC_ENABLE_VENDOR
   &usbdVendorClassCb,   /* 13 Vendor unique   aliased by 0xff */
 #else
   NULL,
@@ -121,12 +127,14 @@ UsbifCbDeInit(int dev, int speed)
   psc = &usbdif.sc[dev];
   for(i = 0; i < USBIF_CLASS_CB_TBL_COUNT; i++) {
     num = psc->rcnumByClassnum[i];
+#if 0
     if(num != USBDIF_CLASSPOS_INVALID) {
       prc = &usbdif.rc[num];
-      printf("XXXX type %x\r\n", prc->type);
+      printf("# Usbdif deinit type %x\r\n", prc->type);
       cb = usbifClassCbTbl[prc->type];
       if(cb && cb->deinit) cb->deinit(prc, speed);
     }
+#endif
   }
 
   return re;
@@ -368,6 +376,7 @@ UsbifInit(int unit, usbdifInitParam_t *pUsbInit)
 
   if(unit < 0) {                 /* all clear */
     memset(&usbdif, 0, sizeof(usbdif));
+    UsbdcoreInit();
     goto end;
   }
 
@@ -377,6 +386,7 @@ UsbifInit(int unit, usbdifInitParam_t *pUsbInit)
   psc = &usbdif.sc[unit];
 
   memset(psc, 0, sizeof(usbdif.sc[0]));
+  psc->unit = unit;
 
   memset(psc->rcnumByClassnum, USBDIF_CLASSPOS_INVALID,
          sizeof(psc->rcnumByClassnum));
@@ -393,7 +403,7 @@ UsbifInit(int unit, usbdifInitParam_t *pUsbInit)
   extern const usbdifDescritprTbl_t usbDescritptorTbl;  /* adhoc */
   psc->pDescTbl = &usbDescritptorTbl;
 
-  result = UsbdevInit(unit, &psc->initParam);
+  //result = UsbdevInit(unit, &psc->initParam);
 
   result = USBDIF_STATUS_SUCCESS;
 fail:
@@ -464,9 +474,18 @@ UsbifStart(int dev)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
 
-  result = UsbdevStart(dev);
+  //result = UsbdevStart(dev);
 
   return result;
+}
+
+
+usbdifStatus_t
+UsbifLoop(void)
+{
+  UsbdcoreCbExecute();
+
+  return USBDIF_STATUS_SUCCESS;
 }
 
 

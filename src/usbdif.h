@@ -29,6 +29,7 @@
 #include        <string.h>
 
 
+
 #define USBDIF_MAX_DEVICE       3       /* FS module, HS module */
 #define USBDIF_MAX_REGCLASS     5
 #define USBDIF_MAX_EPNUM_BIT    4
@@ -82,13 +83,13 @@ typedef enum {
   USBDIF_BUSSTATE_CONNECT,
   USBDIF_BUSSTATE_DISCONNECT,
   USBDIF_BUSSTATE_RESET,
-  USBDIF_BUSSTATE_ENUMULATED       = 0x10,
+  USBDIF_BUSSTATE_ENUMERATED       = 0x10,
 } usbdifBusState_t;
-#define USBDIF_BUSSTATE_ENUMULATED_SPEED_MASK (0xf)
-#define USBDIF_BUSSTATE_ENUMULATED_FULL  ((USBDIF_BUSSTATE_ENUMULATED) | (USBIF_SPEED_FULL))
-#define USBDIF_BUSSTATE_ENUMULATED_LOW   ((USBDIF_BUSSTATE_ENUMULATED) | (USBIF_SPEED_LOW))
-#define USBDIF_BUSSTATE_ENUMULATED_HIGH  ((USBDIF_BUSSTATE_ENUMULATED) | (USBIF_SPEED_HIGH))
-#define USBDIF_BUSSTATE_ENUMULATED_SUPER ((USBDIF_BUSSTATE_ENUMULATED) | (USBIF_SPEED_SUPER))
+#define USBDIF_BUSSTATE_ENUMERATED_SPEED_MASK (0xf)
+#define USBDIF_BUSSTATE_ENUMERATED_FULL  ((USBDIF_BUSSTATE_ENUMERATED) | (USBIF_SPEED_FULL))
+#define USBDIF_BUSSTATE_ENUMERATED_LOW   ((USBDIF_BUSSTATE_ENUMERATED) | (USBIF_SPEED_LOW))
+#define USBDIF_BUSSTATE_ENUMERATED_HIGH  ((USBDIF_BUSSTATE_ENUMERATED) | (USBIF_SPEED_HIGH))
+#define USBDIF_BUSSTATE_ENUMERATED_SUPER ((USBDIF_BUSSTATE_ENUMERATED) | (USBIF_SPEED_SUPER))
 
 typedef enum {
   USBDIF_CLASSTYPE_RESERVED0    = 0,
@@ -251,6 +252,8 @@ struct _stUsbdif {
    */
   usbdifClassDef_t      rc[USBDIF_MAX_REGCLASS];
   int                   rcnum;
+
+  int                   idCoreQueue;
 };
 
 
@@ -280,6 +283,7 @@ uint8_t         UsbifCbGetQualifierDesc(int dev, uint8_t **ppDesc, uint16_t *pLe
 usbdifStatus_t  UsbifInit(int dev, usbdifInitParam_t *pUsbInit);
 int             UsbifRegisterClass(int dev, const usbdifClassDef_t *pClass);
 usbdifStatus_t  UsbifStart(int dev);
+usbdifStatus_t  UsbifLoop(void);
 usbdifClassDef_t        *UsbifGetClassData(int drc);
 
 void            UsbifShowSetup(usbifSetup_t *setup);
@@ -290,13 +294,7 @@ void            UsbifShowSetup(usbifSetup_t *setup);
  */
 usbdifStatus_t          UsbdevInit(int dev, usbdifInitParam_t *pUsbInit);
 usbdifStatus_t          UsbdevStart(int dev);
-usbdifStatus_t          UsbdevOpenEp(int dev, uint8_t  ep_addr, uint8_t  epType, uint16_t epMps);
-usbdifStatus_t          UsbdevCloseEp(int dev, uint8_t ep_addr);
-usbdifStatus_t          UsbdevPrepareRecv(int dev, uint8_t ep_addr, uint8_t *pbuf, uint16_t size);
 int                     UsbdevGetRxDataSize(int dev, uint8_t ep_addr);
-usbdifStatus_t          UsbdevTransmit(int dev, uint8_t ep_addr, const uint8_t *pbuf, uint16_t size);
-usbdifStatus_t          UsbdevFlush(int dev, uint8_t ep_addr);
-usbdifStatus_t          UsbdevCtrlSendData(int dev, uint8_t *buf, uint16_t len);
 void                    UsbdevCtrlError(int dev, usbifSetup_t *s);
 void                    UsbdevSofEntry(int dev);
 
@@ -334,6 +332,7 @@ static uint8_t          UsbifSetupStandardDeviceRequest(struct _stUsbdifDev *psc
 
 #endif /* __GNUC__ */
 
+#include        "usbdcore.h"
 
 
 

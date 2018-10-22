@@ -40,33 +40,71 @@ static uint8_t                  usbdcoreString[0x100];
 
 
 
-#if 0
 /**
-  * @brief  start usb module (for STM32)
-  * @param  dev USB PCD module number
-  * @param  pUsbInit initialize parameters (usbdstmInitParam_t *)
+  * @brief  usbdcore init
+  * @param  none
   * @retval usbdifStatus_t
   */
 usbdifStatus_t
-UsbdevInit(int dev, usbdifInitParam_t *pUsbInit)
+UsbdcoreInit(void)
 {
-  return 0;
+  usbdif.idCoreQueue = RtosQueueCreate(4, sizeof(usbdcoreCbPkt));
+  return USBDIF_STATUS_SUCCESS;
 }
 
 
 /**
-  * @brief  start usb module (for STM32)
-  * @param  dev USB PCD module number
-  * @retval usbdifStatus_t
+  * @brief  all callback entries (BusState, Setup, DataOut, DataInDone)
+  * @details this funcion is called from the module device driver
+             and store request packet to rtos queue
+  * @param  dev the descriptor number of the modeule device
+  * @param  req request number
+  * @param  num endpoint number or busstate number
+  * @param  p the pointer of setup or the value of size
+  * @retval result
   */
 usbdifStatus_t
-UsbdevStart(int dev)
+UsbdcoreCbIsr(int unit, uint8_t req, uint8_t num, void *p)
 {
-  return 0;
+  usbdcoreCbPkt         pkt;
+
+  pkt.unit = unit;
+  pkt.req = req;
+  pkt.num = num;
+  pkt.p = p;
+
+  RtosQueueSendIsr(usbdif.idCoreQueue, (usbdcoreCbPkt *) &pkt, 0);
+
+  return USBDIF_STATUS_SUCCESS;
 }
-#endif
+/**
+  * @brief  all callback execute
+  * @details this funcion is called from the main routine in rtos
+  * @param  none
+  * @retval result
+  */
+usbdifStatus_t
+UsbdcoreCbExecute(void)
+{
+  usbdcoreCbPkt         pkt;
 
+  RtosQueueRecv(usbdif.idCoreQueue, (usbdcoreCbPkt *) &pkt, -1);
 
+  switch(pkt.req) {
+  case USBDCORECB_REQ_DATAOUT:
+    UsbdcoreCbDataOut(pkt.unit, pkt.num, (int) pkt.p);
+    break;
+  case USBDCORECB_REQ_SETUP:
+    UsbdcoreCbSetup(pkt.unit, (usbifSetup_t *) pkt.p);
+    break;
+  case USBDCORECB_REQ_DATAINDONE:
+    UsbdcoreCbDataInDone(pkt.unit, pkt.num);
+    break;
+  case USBDCORECB_REQ_BUSSTATE:
+    UsbdcoreCbBusState(pkt.unit, (usbdifBusState_t) pkt.num);
+    break;
+  }
+}
 
 
 /**
@@ -93,12 +131,12 @@ UsbdcoreCbBusState(int dev, usbdifBusState_t state)
     UsbifCbDeInit(psc->unit, 0);
     psc->deviceState = USBDIF_DEVICESTATE_DEFAULT;
     break;
-  case USBDIF_BUSSTATE_ENUMULATED_FULL:
-  case USBDIF_BUSSTATE_ENUMULATED_LOW:
-  case USBDIF_BUSSTATE_ENUMULATED_HIGH:
-  case USBDIF_BUSSTATE_ENUMULATED_SUPER:
-    printf("enumlated %x\r\n", state);
-    UsbifCbInit(psc->unit, state & USBDIF_BUSSTATE_ENUMULATED_SPEED_MASK);
+  case USBDIF_BUSSTATE_ENUMERATED_FULL:
+  case USBDIF_BUSSTATE_ENUMERATED_LOW:
+  case USBDIF_BUSSTATE_ENUMERATED_HIGH:
+  case USBDIF_BUSSTATE_ENUMERATED_SUPER:
+    printf("enumerated %x\r\n", state);
+    UsbifCbInit(psc->unit, state & USBDIF_BUSSTATE_ENUMERATED_SPEED_MASK);
     break;
   case  USBDIF_BUSSTATE_RESUME:
     printf("resume\r\n");
@@ -256,7 +294,6 @@ UsbdcoreSetupStandardDeviceRequest(struct _stUsbdifDev *psc, usbifSetup_t *s)
     switch(s->wValue >> 8) {
 
     case    USB_DESC_TYPE_DEVICE:               /* Std.GetDesc.Device */
-      printf("# usbdcore  device desc(busy wait)\r\n");
       s->ptr = psc->pDescTbl->device.ptr;
       s->len = MIN(psc->pDescTbl->device.len, s->wLength);
       re = USBDIF_STATUS_SUCCESS;

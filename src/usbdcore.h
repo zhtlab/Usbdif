@@ -26,7 +26,23 @@
 
 
 
+usbdifStatus_t          UsbdcoreInit(void);
 
+usbdifStatus_t          UsbdcoreCbIsr(int unit, uint8_t req, uint8_t num, void *p);
+enum {
+  USBDCORECB_REQ_BUSSTATE = 0,
+  USBDCORECB_REQ_SETUP = 1,
+  USBDCORECB_REQ_DATAOUT = 2,
+  USBDCORECB_REQ_DATAINDONE = 3,
+};
+typedef struct {
+  uint8_t       unit;
+  uint8_t       req;
+  uint8_t       num;
+  uint8_t       reserved;
+  void          *p;
+} usbdcoreCbPkt;
+usbdifStatus_t          UsbdcoreCbExecute(void);
 
 usbdifStatus_t          UsbdcoreCbBusState(int dev, usbdifBusState_t state);
 usbdifStatus_t          UsbdcoreCbSetup(int unit, usbifSetup_t *s);

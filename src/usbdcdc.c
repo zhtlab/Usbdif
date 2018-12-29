@@ -23,11 +23,11 @@
 
 #define _USBDCDC_C_
 
+#include "rtos.h"
+
 #include "usb_def.h"
 #include "usbdif.h"
 #include "usb_desc.h"
-
-#include "rtos.h"
 
 #include "usbdcdc.h"
 
@@ -45,7 +45,7 @@ usbifClassCb_t  usbdCdcClassCb = {
 
 
 static usbdifStatus_t
-UsbdCdcInit(usbdifClassDef_t *prc, uint8_t cfgidx)
+UsbdCdcInit(usbdifClassDef_t *prc, int cfgnum)
 {
   uint8_t ret = USBDIF_STATUS_UNKNOWN;
 
@@ -92,10 +92,7 @@ UsbdCdcInit(usbdifClassDef_t *prc, uint8_t cfgidx)
   /* Init  physical Interface components */
   if(prc->pUserData) ((usbdcdcCb_t *)prc->pUserData)->init(prc);
 
-#if 1
-  /* Prepare Out endpoint to receive next packet */
-  DevUsbPrepareReceive(prc->dev, USBDESC_EP_CDC_OUT, pCdc->RxBuffer, szOut);
-#endif
+  UsbdevPrepareRecv(prc->dev, pCdc->epOut, pCdc->RxBuffer, szOut);
 
   ret = USBDIF_STATUS_SUCCESS;
 
@@ -105,7 +102,7 @@ fail:
 
 
 static usbdifStatus_t
-UsbdCdcDeInit(usbdifClassDef_t *prc, uint8_t cfgidx)
+UsbdCdcDeInit(usbdifClassDef_t *prc, int cfgnum)
 {
   uint8_t ret = 0;
   usbdCdcHandle_t               *pCdc;

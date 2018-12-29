@@ -113,8 +113,8 @@ typedef struct
 } usbdCdcHandle_t;
 
 
-static usbdifStatus_t  UsbdCdcInit(usbdifClassDef_t *prc, uint8_t cfgidx);
-static usbdifStatus_t  UsbdCdcDeInit(usbdifClassDef_t *prc, uint8_t cfgidx);
+static usbdifStatus_t  UsbdCdcInit(usbdifClassDef_t *prc, int cfgnum);
+static usbdifStatus_t  UsbdCdcDeInit(usbdifClassDef_t *prc, int cfgnum);
 static usbdifStatus_t  UsbdCdcSetup(usbdifClassDef_t *prc, usbifSetup_t *req);
 static usbdifStatus_t  UsbdCdcDataIn(usbdifClassDef_t *prc, uint8_t epnum);
 static usbdifStatus_t  UsbdCdcDataOut(usbdifClassDef_t *prc, uint8_t epnum, int size);

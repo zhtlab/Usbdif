@@ -25,13 +25,14 @@
 
 #include        <stdio.h>
 
-#include        "config.h"
-#include        "system.h"
+#include        "rtos.h"
 
 #include        "usb_def.h"
 #include        "usbdif.h"
 #include        "usbdcore.h"
 
+
+#define USBDCORE_SHOW_BUSSTATE  0
 
 extern struct _stUsbdif         usbdif;
 static uint8_t                  usbdcoreString[0x100];
@@ -123,11 +124,15 @@ UsbdcoreCbBusState(int dev, usbdifBusState_t state)
   struct _stUsbdifDev   *psc;
   psc = &usbdif.sc[dev];
 
-  printf("# usbdcore.c bus state: ");
+#if USBDCORE_SHOW_BUSSTATE
+  puts("# usbdcore.c bus state: ");
+#endif
 
   switch(state) {
   case  USBDIF_BUSSTATE_RESET:
-    printf("reset\r\n");
+#if USBDCORE_SHOW_BUSSTATE
+    puts("reset\n");
+#endif
     UsbifCbDeInit(psc->unit, 0);
     psc->deviceState = USBDIF_DEVICESTATE_DEFAULT;
     break;
@@ -135,20 +140,30 @@ UsbdcoreCbBusState(int dev, usbdifBusState_t state)
   case USBDIF_BUSSTATE_ENUMERATED_LOW:
   case USBDIF_BUSSTATE_ENUMERATED_HIGH:
   case USBDIF_BUSSTATE_ENUMERATED_SUPER:
-    printf("enumerated %x\r\n", state);
+#if USBDCORE_SHOW_BUSSTATE
+    printf("enumerated %x\n", state);
+#endif
     UsbifCbInit(psc->unit, state & USBDIF_BUSSTATE_ENUMERATED_SPEED_MASK);
     break;
   case  USBDIF_BUSSTATE_RESUME:
-    printf("resume\r\n");
+#if USBDCORE_SHOW_BUSSTATE
+    puts("resume\n");
+#endif
     break;
   case  USBDIF_BUSSTATE_SUSPEND:
-    printf("suspend\r\n");
+#if USBDCORE_SHOW_BUSSTATE
+    puts("suspend\n");
+#endif
     break;
   case  USBDIF_BUSSTATE_CONNECT:
-    printf("connect\r\n");
+#if USBDCORE_SHOW_BUSSTATE
+    puts("connect\n");
+#endif
     break;
   case  USBDIF_BUSSTATE_DISCONNECT:
-    printf("disconnect\r\n");
+#if USBDCORE_SHOW_BUSSTATE
+    puts("disconnect\n");
+#endif
     break;
   }
 
@@ -281,7 +296,6 @@ UsbdcoreSetupStandardDeviceRequest(struct _stUsbdifDev *psc, usbifSetup_t *s)
 
     break;
   case        USB_BREQ_SET_INTERFACE:
-    printf("XXXX usbcore set 1 interface %x\r\n", s->wIndex);
     re = UsbifCbSetup(psc->unit, s);
     break;
 
@@ -470,9 +484,6 @@ UsbdevCtrlStall(int unit)
 void
 UsbdevSofEntry(int unit)
 {
-  uint8_t               result = -1;
-  usbdifStatus_t        re;
-
   int                   i;
   /*USBD_ClassTypeDef     *cb;*/
   usbifSof_t            sof;
@@ -498,11 +509,9 @@ UsbdevSofEntry(int unit)
   totalCount++;
   sof.totalCount = totalCount;
 
-  re = UsbifCbSof(unit, &sof);
-  if(re == USBDIF_STATUS_UNKNOWN) result = -1;
+  UsbifCbSof(unit, &sof);
 
-  return re;
-
+  return;
 }
 
 
@@ -551,7 +560,7 @@ UsbdevCloseEp(int unit, uint8_t epnum)
   * @retval usbdifStatus_t
   */
 usbdifStatus_t
-UsbdevPrepareRecv(int unit, uint8_t epnum, uint8_t *pbuf, uint16_t size)
+UsbdevPrepareRecv(int unit, uint8_t epnum, uint8_t *pbuf, int size)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
 
@@ -585,7 +594,7 @@ UsbdevGetRxDataSize(int unit, uint8_t epnum)
   * @retval usbdifStatus_t
   */
 usbdifStatus_t
-UsbdevTransmit(int unit, uint8_t epnum, const uint8_t *pbuf, uint16_t size)
+UsbdevTransmit(int unit, uint8_t epnum, const uint8_t *pbuf, int size)
 {
   usbdifStatus_t        result = USBDIF_STATUS_UNKNOWN;
 

@@ -56,9 +56,9 @@ void                    UsbdevCtrlError(int unit, usbifSetup_t *s);
 
 usbdifStatus_t          UsbdevOpenEp(int unit, uint8_t epnum, uint8_t epType, uint16_t epMps);
 usbdifStatus_t          UsbdevCloseEp(int unit, uint8_t epnum);
-usbdifStatus_t          UsbdevPrepareRecv(int unit, uint8_t epnum, uint8_t *pbuf, uint16_t size);
+usbdifStatus_t          UsbdevPrepareRecv(int unit, uint8_t epnum, uint8_t *pbuf, int size);
 int                     UsbdevGetRxDataSize(int unit, uint8_t epnum);
-usbdifStatus_t          UsbdevTransmit(int unit, uint8_t epnum, const uint8_t *pbuf, uint16_t size);
+usbdifStatus_t          UsbdevTransmit(int unit, uint8_t epnum, const uint8_t *pbuf, int size);
 usbdifStatus_t          UsbdevFlush(int dev, uint8_t epnum);
 void                    UsbdevSofEntry(int unit);
 
@@ -69,6 +69,14 @@ static int              UsbdcoreBuildStringDesc(uint8_t *str);
 
 static void             UsbdevCtrlStall(int unit);
 
+
+/* the function prototype of the lower module(chip) device driver */
+int             DevUsbOpenEp(int unit, uint8_t epnum, int type, int size);
+int             DevUsbCloseEp(int unit, uint8_t epnum);
+int             DevUsbTransmit(int unit, uint8_t epnum, const uint8_t *ptr, int size);
+int             DevUsbPrepareReceive(int unit, uint8_t epnum, const uint8_t *ptr, int size);
+int             DevUsbSetStall(int unit, uint8_t epnum);
+int             DevUsbSetAddress(int unit, int address);
 
 #endif
 

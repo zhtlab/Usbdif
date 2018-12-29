@@ -24,17 +24,12 @@
 #define _USBDAUDIO_C_
 
 
-#include        "config.h"
-
 #include        "usb_def.h"
 #include        "usb_def_audio20.h"
 
 #include        "usb_desc.h"
 #include        "usbdif.h"
 #include        "usbdaudio.h"
-
-#include        "system.h"
-
 
 
 extern struct _stUsbdif         usbdif;
@@ -64,11 +59,11 @@ static int              posSof = 0;
   * @brief  callback entry of init
   * @details this function is called, if initialize
   * @param  drc  registered class number
-  * @param  cfgidx ???
+  * @param  cfgnum  configuration number
   * @retval result [USBD_OK, FAIL]
   */
 static usbdifStatus_t
-UsbdAudioCbInit(usbdifClassDef_t *prc, int speed)
+UsbdAudioCbInit(usbdifClassDef_t *prc, int cfgnum)
 {
   uint8_t               result = USBDIF_STATUS_UNKNOWN;
   usbdAudioHandle_t     *pAudio;
@@ -127,11 +122,11 @@ fail:
   * @brief  callback entry of de-init
   * @details this function is called, if de-initialize
   * @param  drc  registered class number
-  * @param  cfgidx ???
+  * @param  cfgidx configuration number
   * @retval result [USBD_OK, FAIL]
   */
 static usbdifStatus_t
-UsbdAudioCbDeInit(usbdifClassDef_t *prc, int speed)
+UsbdAudioCbDeInit(usbdifClassDef_t *prc, int cfgnum)
 {
   usbdAudioHandle_t     *pAudio;
 

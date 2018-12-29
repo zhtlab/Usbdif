@@ -28,6 +28,7 @@
 #include        <stdlib.h>
 #include        <string.h>
 
+#include        "rtos.h"
 
 
 #define USBDIF_MAX_DEVICE       3       /* FS module, HS module */
@@ -62,14 +63,6 @@ typedef enum {
   USBDIF_DEVICESTATE_SUSPENDED_CONFIGURED,
 } usbdifDeviceState_t;
 
-#if 0
-enum usbdifPhySpeed {
-  USBIF_SPEED_FULL        = USB_SPEED_FULL,
-  USBIF_SPEED_LOW         = USB_SPEED_LOW,
-  USBIF_SPEED_HIGH        = USB_SPEED_HIGH,
-  USBIF_SPEED_SUPER       = USB_SPEED_SUPER
-};
-#endif
 /* USB_SPEED_XX are defined in the device definition file */
 #define USBIF_SPEED_FULL        USB_SPEED_FULL
 #define USBIF_SPEED_LOW         USB_SPEED_LOW
@@ -213,12 +206,6 @@ struct _stUsbdifDev {
   uint8_t               unit;
   uint8_t               deviceState;
   uint8_t               speed;          /* usbdifPhySpeed_t */
-#if 0
-#define USBIF_SPEED_FULL        0
-#define USBIF_SPEED_LOW         1
-#define USBIF_SPEED_HIGH        2
-#define USBIF_SPEED_SUPER       3
-#endif
 
   usbdifInitParam_t     initParam;
   const usbdifDescritprTbl_t    *pDescTbl;
@@ -253,14 +240,14 @@ struct _stUsbdif {
   usbdifClassDef_t      rc[USBDIF_MAX_REGCLASS];
   int                   rcnum;
 
-  int                   idCoreQueue;
+  rtosQueueId           idCoreQueue;
 };
 
 
 
 typedef struct {
-  usbdifStatus_t  (*init)          (usbdifClassDef_t *prc, int speed);
-  usbdifStatus_t  (*deinit)        (usbdifClassDef_t *prc, int speed);
+  usbdifStatus_t  (*init)          (usbdifClassDef_t *prc, int cfgnum);
+  usbdifStatus_t  (*deinit)        (usbdifClassDef_t *prc, int cfgnum);
   /* Control Endpoints*/
   usbdifStatus_t  (*setup)         (usbdifClassDef_t *prc, usbifSetup_t *req);
   usbdifStatus_t  (*dataInDone)    (usbdifClassDef_t *prc, uint8_t epnum);
@@ -269,8 +256,8 @@ typedef struct {
 } usbifClassCb_t;
 
 
-uint8_t         UsbifCbInit(int dev, int speed);
-uint8_t         UsbifCbDeInit(int dev, int speed);
+uint8_t         UsbifCbInit(int dev, int cfgnum);
+uint8_t         UsbifCbDeInit(int dev, int cfgnum);
 uint8_t         UsbifCbBusState(int dev, usbdifBusState_t state);
 uint8_t         UsbifCbSetup(int dev, usbifSetup_t *pSetup);
 uint8_t         UsbifCbDataOut(int dev, uint8_t epnum, int size);

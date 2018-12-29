@@ -25,19 +25,23 @@
 
 #include        <stdlib.h>
 #include        <stdio.h>
-#include        "config.h"
 
 #include        "usb_def.h"
 #include        "usb_desc.h"
 
 #include        "usbdif.h"
-#if USBDESC_ENABLE_AUDIO
-//#include        "usb_audio.h"
-extern usbifClassCb_t           usbdAudioClassCb;
-#endif
+
+#define USBDESC_ENABLE_CDC      ((USBDESC_ENABLE_CDCACM) || \
+                                 (USBDESC_ENABLE_CDCRNDIS) || \
+                                 (USBDESC_ENABLE_ECM))
 
 struct _stUsbdif        usbdif;
+
+#if USBDESC_ENABLE_AUDIO
+extern usbifClassCb_t           usbdAudioClassCb;
+#endif
 extern usbifClassCb_t           usbdCdcClassCb;
+extern usbifClassCb_t           usbdHidClassCb;
 extern usbifClassCb_t           usbdMscClassCb;
 extern usbifClassCb_t           usbdCdcRndisClassCb;
 #if USBDESC_ENABLE_VENDOR
@@ -50,15 +54,27 @@ usbifClassCb_t  *usbifClassCbTbl[] = {
 #if USBDESC_ENABLE_AUDIO
   &usbdAudioClassCb,    /*  1 AUDIO */
 #else
-  NULL,                 /*  1 AUDIO */
+  NULL,
 #endif
+#if USBDESC_ENABLE_CDC
   &usbdCdcClassCb,      /*  2 CDC */
-  NULL,                 /*  3 HID */
+#else
+  NULL,
+#endif
+#if USBDESC_ENABLE_HID
+  &usbdHidClassCb,      /*  3 HID */
+#else
+  NULL,
+#endif
   NULL,                 /*  4 none */
   NULL,                 /*  5 PHYSICAL */
   NULL,                 /*  6 IMAGE */
   NULL,                 /*  7 PRINTER */
+#if USBDESC_ENABLE_MSC
   &usbdMscClassCb,      /*  8 MASS STORAGE */
+#else
+  NULL,
+#endif
   NULL,                 /*  9 HUB */
   NULL,                 /*  A CDC-DATA */
   NULL,                 /*  B CHIP/SMART card */
@@ -87,7 +103,7 @@ usbifClassCb_t  *usbifClassCbTbl[] = {
   * @retval result
   */
 uint8_t
-UsbifCbInit(int dev, int speed)
+UsbifCbInit(int dev, int cfgnum)
 {
   int                   re = USBDIF_STATUS_SUCCESS;
   struct _stUsbdifDev   *psc;
@@ -95,8 +111,11 @@ UsbifCbInit(int dev, int speed)
 
   int                   i, num, type;
   usbifClassCb_t        *cb;
+  int                   speed;
 
   psc = &usbdif.sc[dev];
+
+  speed = psc->speed;
   for(i = 0; i < psc->classnum; i++) {
     num = psc->rcnumByClassnum[i];
     if(num != USBDIF_CLASSPOS_INVALID) {
@@ -116,21 +135,25 @@ UsbifCbInit(int dev, int speed)
   * @retval result
   */
 uint8_t
-UsbifCbDeInit(int dev, int speed)
+UsbifCbDeInit(int dev, int cfgnum)
 {
   int                   re = USBDIF_STATUS_SUCCESS;
   struct _stUsbdifDev   *psc;
   usbdifClassDef_t      *prc;
   int                   i, num, type;
   usbifClassCb_t        *cb;
+  int                   speed;
 
   psc = &usbdif.sc[dev];
+
+  speed = psc->speed;
+
   for(i = 0; i < USBIF_CLASS_CB_TBL_COUNT; i++) {
     num = psc->rcnumByClassnum[i];
 #if 0
     if(num != USBDIF_CLASSPOS_INVALID) {
       prc = &usbdif.rc[num];
-      printf("# Usbdif deinit type %x\r\n", prc->type);
+      printf("# Usbdif deinit type %x\n", prc->type);
       cb = usbifClassCbTbl[prc->type];
       if(cb && cb->deinit) cb->deinit(prc, speed);
     }
@@ -200,17 +223,19 @@ UsbifCbSetup(int dev, usbifSetup_t *s)
     break;
   }
 
-  //printf("## usbdif classtype %x\r\n", classtype);
+  //printf("## usbdif classtype %x\n", classtype);
 
   if(classtype) {
     cb = usbifClassCbTbl[classtype];
     if(cb && cb->setup) re = cb->setup(prc, s);
+    else printf("# UsbdifCbSetup() cb or set->setup is not registered[%d]\n", classtype);
+
 
   } else if(classtype == 0) {
     switch(s->bmRequest & USB_BMREQ_TYPE_MASK) {
     case USB_BMREQ_TYPE_CLASS:
       UsbifShowSetup(s);
-      printf("  this class is not registered yet\r\n");
+      printf("# UsbdifCbSetup() this class is not registered yet\n");
       break;
 
     case USB_BMREQ_TYPE_VENDOR:
@@ -220,7 +245,7 @@ UsbifCbSetup(int dev, usbifSetup_t *s)
       break;
 
     case USB_BMREQ_TYPE_STANDARD:
-      printf("XXXX standard \r\n");
+      printf("# UsbdifCbSetup() standard \n");
       break;
     }
   } else {
@@ -506,7 +531,7 @@ fail:
 void
 UsbifShowSetup(usbifSetup_t *s)
 {
-  printf("bmReq:%02x,bReq:%02x,wVal:%04x,wIdx:%04x,wLen:%04x\r\n",
+  printf("bmReq:%02x,bReq:%02x,wVal:%04x,wIdx:%04x,wLen:%04x\n",
          s->bmRequest, s->bRequest,
          s->wValue, s->wIndex, s->wLength);
   if(!(s->bmRequest & 0x80) && s->wLength) {
@@ -514,7 +539,7 @@ UsbifShowSetup(usbifSetup_t *s)
     for(int i = 0; i < s->wLength; i++) {
       printf(" %02x", s->buf[i]);
     }
-    printf("\r\n");
+    puts("\n");
   }
   return;
 }

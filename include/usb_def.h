@@ -55,6 +55,9 @@
 #define USB_BREQ_SET_INTERFACE                          0x0B
 #define USB_BREQ_SYNCH_FRAME                            0x0C
 
+#define USB_BREQ_HID_SET_OUTPUT_REPORT                  0x09
+#define USB_BREQ_HID_SET_IDLE                           0x0a
+
 
 /*** descritpor types  MSB of wValue */
 #define  USB_DESC_TYPE_DEVICE                           1
@@ -78,6 +81,10 @@
 #define  USB_DESC_TYPE_CS_ENDPOINT                      0x25
 #define  USB_DESC_TYPE_SS_ENDPOINT_COMPANION            0x30
 #define  USB_DESC_TYPE_SSPLUS_ISOC_ENDPOINT_COMPANION   0x31
+
+/* hid */
+#define USB_DESC_TYPE_HID                               0x21
+#define USB_DESC_HID_REPORT                             0x22
 
 
 /*** device capability type  for BOS */
@@ -132,6 +139,12 @@
 #define         USB_CS_CDC_ETHERNET_NETWORKING  0x0f
 #define         USB_CS_CDC_ATM_NETWORKING       0x10
 #define USB_CLASS_TYPE_HID              3
+#define         USB_SUBCLASS_TYPE_HID_NOSUBCLASS 0
+#define         USB_SUBCLASS_TYPE_HID_BOOT      1
+#define         USB_PROTCOL_ID_HID_NONE         0
+#define         USB_PROTCOL_ID_HID_KEYBOARD     1
+#define         USB_PROTCOL_ID_HID_MOUSE        2
+
 #define USB_CLASS_TYPE_RESERVED4        4
 #define USB_CLASS_TYPE_PHYSICAL         5
 #define USB_CLASS_TYPE_IMAGE            6

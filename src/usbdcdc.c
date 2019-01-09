@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 zhtlab
+ * Copyright (c) 2018,2019 zhtlab
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -195,7 +195,7 @@ UsbdCdcDataOut(usbdifClassDef_t *prc, uint8_t epnum, int size)
   /* exec callback with rx data */
   pCdc->RxLength = size;
   ((usbdcdcCb_t *)prc->pUserData)->recv(prc, pCdc->RxBuffer, pCdc->RxLength);
-  printf("usbdcdc recv %x %x\r\n", *pCdc->RxBuffer, pCdc->RxLength);
+  //printf("usbdcdc recv %x %x\r\n", *pCdc->RxBuffer, pCdc->RxLength);
 
   result = USBDIF_STATUS_SUCCESS;
 
